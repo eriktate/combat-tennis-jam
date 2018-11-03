@@ -84,6 +84,7 @@ proc main =
 
   var face: Sprite = newSprite(newVec2D(500, 200), renderer.loadTexture("assets/sprites/face.png"), 32, 32, Point((x: 16.cint, y: 16.cint)))
   var racket: Sprite = newSprite(newVec2D(564, 200), renderer.loadTexture("assets/sprites/racket.png"), 32, 48, Point((x: 16.cint, y: 64.cint)))
+  var ball: Sprite = newSprite(newVec2D(600, 332), renderer.loadTexture("assets/sprites/ball.png"), 16, 16)
   var game = newGame(renderer)
   game.player = face
   var dest = rect(500.cint, 200.cint, face.w.cint, face.h.cint)
@@ -103,6 +104,7 @@ proc main =
     renderer.clear()
     renderer.copyEx(racket.tex, racket.texRect(), racket.destRect(), angle = radToDeg(racket.rot + PI/2), center = addr(racket.center), flip = SDL_FLIP_NONE)
     renderer.copyEx(face.tex, face.texRect(), face.destRect(), angle = 0.0, center = nil, flip = SDL_FLIP_NONE)
+    renderer.copyEx(ball.tex, ball.texRect(), ball.destRect(), angle = 0.0, center = nil, flip = SDL_FLIP_NONE)
     renderer.present()
 
 main()
