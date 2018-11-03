@@ -1,3 +1,5 @@
+import strformat
+
 import sdl2
 import sdl2/image
 
@@ -14,6 +16,7 @@ type
   Game = ref object
     inputs: array[Input, bool]
     renderer: RendererPtr
+    player: Face
 
 proc toInput(key: ScanCode): Input =
   case key
@@ -50,10 +53,10 @@ proc main =
     "SDL2 initialization failed"
   defer: sdl2.quit()
 
-  const imgFlags: cint = IMG_INIT_PNG
-  sdlFailIf(image.init(imgFlags) != imgFlags):
-    "SDL2 Image initialization failed"
-  defer: image.quit()
+  # const imgFlags: cint = IMG_INIT_PNG
+  # sdlFailIf(image.init(imgFlags) != imgFlags):
+  #   "SDL2 Image initialization failed"
+  # defer: image.quit()
 
   sdlFailIf(not setHint("SDL_RENDER_SCALE_QUALITY", "2")):
     "Linear texture filtering could not be enabled"
@@ -71,12 +74,17 @@ proc main =
 
   var f: Face = newFace(newVec2D(500, 200), renderer.loadTexture("assets/sprites/face.png"), 32, 32)
   var game = newGame(renderer)
-  # var src = rect(0.cint, 0.cint, f.w.cint, f.h.cint) # TODO (erik): Figure out how to get this from Face.
+  game.player = f
   var dest = rect(500.cint, 200.cint, f.w.cint, f.h.cint)
+
   while true:
     game.handleInput()
+    let new_x: float = game.inputs[Input.right].float - game.inputs[Input.left].float
+    let new_y: float = -(game.inputs[Input.up].float - game.inputs[Input.down].float)
+
+    game.player.pos = game.player.pos + (newVec2D(new_x, new_y) * 0.2)
     renderer.clear()
-    renderer.copyEx(f.tex, f.texRect(), dest, angle = 0.0, center = nil, flip = SDL_FLIP_NONE)
+    renderer.copyEx(f.tex, f.texRect(), f.destRect(), angle = 0.0, center = nil, flip = SDL_FLIP_NONE)
     renderer.present()
 
 main()
