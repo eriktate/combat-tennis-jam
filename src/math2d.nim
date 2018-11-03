@@ -5,6 +5,8 @@
 # scalar mult
 import math
 
+import sdl2
+
 type
   Vec2D* = tuple[x: float, y: float]
   Rectangle* = tuple[x, y, w, h: float]
@@ -14,6 +16,14 @@ type
 func newVec2D*(x, y: float): Vec2D =
   result.x = x
   result.y = y
+
+func newVec2D*(a, b: Vec2D): Vec2D =
+  result.x = (b.x - a.x)
+  result.y = (b.y - a.y)
+
+func newVec2D*(point: Point): Vec2D =
+  result.x = point.x.float
+  result.y = point.y.float
 
 func newRectangle*(x, y, w, h: float): Rectangle =
   result = (x: x, y: y, w: w, h: h)
@@ -25,9 +35,17 @@ func `+`*(left: Vec2D, right: Vec2D): Vec2D =
   result.x = left.x + right.x
   result.y = left.y + right.y
 
+func `+`*(left: Vec2D, right: Point): Vec2D =
+  result.x = left.x + right.x.float
+  result.y = left.y + right.y.float
+
 func `-`*(left: Vec2D, right: Vec2D): Vec2D =
   result.x = left.x - right.x
   result.y = left.y - right.y
+
+func `-`*(left: Vec2D, right: Point): Vec2D =
+  result.x = left.x - right.x.float
+  result.y = left.y - right.y.float
 
 func `*`*(vec: Vec2D, scalar: float): Vec2D =
   result.x = vec.x * scalar
@@ -58,6 +76,18 @@ func `!=`*(left: Rectangle, right: Rectangle): bool =
 
 func mag*(vec: Vec2D): float =
   sqrt(vec.x * vec.x + vec.y * vec.y)
+
+func unit*(vec: Vec2D): Vec2D =
+  let magnitude: float = mag(vec)
+  result.x = vec.x / magnitude
+  result.y = vec.y / magnitude
+
+func angle*(vec: Vec2D): float =
+  arctan2(vec.y, vec.x)
+
+func toPoint*(vec: Vec2D): Point =
+  result.x = vec.x.cint
+  result.y = vec.y.cint
 
 func toQuad*(rec: Rectangle): Quad =
   let
@@ -92,11 +122,6 @@ func rot*(vec: Vec2D, rad: float): Vec2D =
     result.x = 0.0
   if result.y < 0.00000001:
     result.y = 0.0
-
-func unit*(vec: Vec2D): Vec2D =
-  let magnitude: float = mag(vec)
-  result.x = vec.x / magnitude
-  result.y = vec.y / magnitude
 
 func intersect*(vec: Vec2D, quad: Quad): bool =
   (vec.x > quad.tl.x) and (vec.y > quad.tl.y) and
