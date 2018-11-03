@@ -10,6 +10,17 @@ type
   Rectangle* = tuple[x, y, w, h: float]
   Quad* = tuple[tl, br: Vec2D]
 
+
+func newVec2D*(x, y: float): Vec2D =
+  result.x = x
+  result.y = y
+
+func newRectangle*(x, y, w, h: float): Rectangle =
+  result = (x: x, y: y, w: w, h: h)
+
+func newQuad*(tl, br: Vec2D): Quad =
+  result = (tl: tl, br: br)
+
 func `+`*(left: Vec2D, right: Vec2D): Vec2D =
   result.x = left.x + right.x
   result.y = left.y + right.y
