@@ -1,9 +1,10 @@
 import strformat
+import math
 
 import sdl2
 import sdl2/image
 
-import face
+import sprite
 import math2d
 
 type SDLException = object of Exception
@@ -16,7 +17,15 @@ type
   Game = ref object
     inputs: array[Input, bool]
     renderer: RendererPtr
-    player: Face
+    player: Sprite
+
+proc getMousePoint(): Point =
+  var
+    x: cint = 0.cint
+    y: cint = 0.cint
+
+  getMouseState(x, y)
+  result = (x: x, y: y)
 
 proc toInput(key: ScanCode): Input =
   case key
@@ -48,6 +57,7 @@ proc newGame(renderer: RendererPtr): Game =
   new result
   result.renderer = renderer
 
+
 proc main =
   sdlFailIf(not sdl2.init(INIT_VIDEO or INIT_TIMER or INIT_EVENTS)):
     "SDL2 initialization failed"
@@ -72,19 +82,27 @@ proc main =
 
   renderer.setDrawColor(r = 118, g = 66, b = 138)
 
-  var f: Face = newFace(newVec2D(500, 200), renderer.loadTexture("assets/sprites/face.png"), 32, 32)
+  var face: Sprite = newSprite(newVec2D(500, 200), renderer.loadTexture("assets/sprites/face.png"), 32, 32, Point((x: 16.cint, y: 16.cint)))
+  var racket: Sprite = newSprite(newVec2D(564, 200), renderer.loadTexture("assets/sprites/racket.png"), 32, 48, Point((x: 16.cint, y: 64.cint)))
   var game = newGame(renderer)
-  game.player = f
-  var dest = rect(500.cint, 200.cint, f.w.cint, f.h.cint)
+  game.player = face
+  var dest = rect(500.cint, 200.cint, face.w.cint, face.h.cint)
 
   while true:
+    let mouse_point = getMousePoint()
+    let rotation_vec = newVec2D(racket.pos + racket.center, newVec2D(mouse_point))
+    racket.rot = rotation_vec.angle
     game.handleInput()
-    let new_x: float = game.inputs[Input.right].float - game.inputs[Input.left].float
-    let new_y: float = -(game.inputs[Input.up].float - game.inputs[Input.down].float)
+    let
+      new_x: float = game.inputs[Input.right].float - game.inputs[Input.left].float
+      new_y: float = -(game.inputs[Input.up].float - game.inputs[Input.down].float)
+      offset: Vec2D = (x: 0.0, y: face.h.float)
 
-    game.player.pos = game.player.pos + (newVec2D(new_x, new_y) * 0.2)
+    racket.pos = (face.pos - racket.center + face.center)
+    game.player.pos = game.player.pos + (newVec2D(new_x, new_y) * 0.4)
     renderer.clear()
-    renderer.copyEx(f.tex, f.texRect(), f.destRect(), angle = 0.0, center = nil, flip = SDL_FLIP_NONE)
+    renderer.copyEx(racket.tex, racket.texRect(), racket.destRect(), angle = radToDeg(racket.rot + PI/2), center = addr(racket.center), flip = SDL_FLIP_NONE)
+    renderer.copyEx(face.tex, face.texRect(), face.destRect(), angle = 0.0, center = nil, flip = SDL_FLIP_NONE)
     renderer.present()
 
 main()
