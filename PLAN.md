@@ -53,6 +53,3 @@ A hybrid of deathmatch, deck building, and tennis. In a galaxy far, far away int
 - Shock Wave - Emit a pulse every second for a time that pushes your opponent away from you (not hard, just enough to be dangerous if they aren't paying attention).
 	- Stack: Either pulse every half second or double the power. Whatever works better.
 
-## Hybrid
-
-- 
