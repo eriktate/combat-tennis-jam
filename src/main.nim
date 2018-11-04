@@ -1,10 +1,12 @@
 import strformat
 import math
+import times
 
 import sdl2
 import sdl2/image
 
 import sprite
+import animation
 import math2d
 
 type SDLException = object of Exception
@@ -81,25 +83,32 @@ proc main =
 
   renderer.setDrawColor(r = 118, g = 66, b = 138)
 
-  var face: Sprite = newSprite(newVec2D(500, 200), renderer.loadTexture("assets/sprites/face.png"), 32, 32, Point((x: 16.cint, y: 16.cint)))
-  var racket: Sprite = newSprite(newVec2D(564, 200), renderer.loadTexture("assets/sprites/racket.png"), 48, 32, Point((x: 64.cint, y: 16.cint)))
-  var ball: Sprite = newSprite(newVec2D(600, 332), renderer.loadTexture("assets/sprites/ball.png"), 16, 16, Point((x: 8.cint, y: 8.cint)))
-  var game = newGame(renderer)
-  game.player = face
-  var dest = rect(500.cint, 200.cint, face.w.cint, face.h.cint)
+  var
+    face: Sprite = newSprite(newVec2D(500, 200), renderer.loadTexture("assets/sprites/face.png"), 32, 32, Point((x: 16.cint, y: 16.cint)))
+    racket: Sprite = newSprite(newVec2D(564, 200), renderer.loadTexture("assets/sprites/racket.png"), 48, 32, Point((x: 64.cint, y: 16.cint)))
+    ball: Sprite = newSprite(newVec2D(600, 332), renderer.loadTexture("assets/sprites/ball.png"), 16, 16, Point((x: 8.cint, y: 8.cint)))
+    game = newGame(renderer)
+    dest = rect(500.cint, 200.cint, face.w.cint, face.h.cint)
+    prev_racket_rot: float = 0.0
+    ball_is_hit = false
+    ball_direction: Vec2D = (x: 1.0, y: 1.0)
+    last_time: float = cpuTime()
 
-  var prev_racket_rot: float = 0.0
-  var ball_is_hit = false
-  var ball_direction: Vec2D = (x: 1.0, y: 1.0)
+  face.anim = newAnimation(10.0, @[0, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 3, 4, 4, 4, 4, 3])
+  game.player = face
   while true:
-    let mouse_point = getMousePoint()
-    let rotation_vec = newVec2D(racket.pos + racket.center, newVec2D(mouse_point))
-    racket.rot = rotation_vec.angle
-    game.handleInput()
     let
+      current_time: float = cpuTime()
+      elapsed_time: float = current_time - last_time
+      mouse_point = getMousePoint()
+      rotation_vec = newVec2D(racket.pos + racket.center, newVec2D(mouse_point))
       new_x: float = game.inputs[Input.right].float - game.inputs[Input.left].float
       new_y: float = -(game.inputs[Input.up].float - game.inputs[Input.down].float)
 
+    racket.rot = rotation_vec.angle
+    last_time = current_time
+
+    game.handleInput()
     racket.pos = (face.pos - racket.center + face.center)
     game.player.pos = game.player.pos + (newVec2D(new_x, new_y) * 0.4)
 
@@ -123,9 +132,9 @@ proc main =
       ball_is_hit = false
 
     renderer.clear()
-    renderer.copyEx(racket.tex, racket.texRect(), racket.destRect(), angle = radToDeg(racket.rot), center = addr(racket.center), flip = SDL_FLIP_NONE)
-    renderer.copyEx(face.tex, face.texRect(), face.destRect(), angle = 0.0, center = nil, flip = SDL_FLIP_NONE)
-    renderer.copyEx(ball.tex, ball.texRect(), ball.destRect(), angle = 0.0, center = nil, flip = SDL_FLIP_NONE)
+    # renderer.copyEx(racket.tex, racket.texRect(elapsedTime), racket.destRect(), angle = radToDeg(racket.rot), center = addr(racket.center), flip = SDL_FLIP_NONE)
+    renderer.copyEx(face.tex, face.texRect(elapsed_time), face.destRect(), angle = 0.0, center = nil, flip = SDL_FLIP_NONE)
+    # renderer.copyEx(ball.tex, ball.texRect(elapsed_time), ball.destRect(), angle = 0.0, center = nil, flip = SDL_FLIP_NONE)
     renderer.present()
 
 main()
