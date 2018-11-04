@@ -37,6 +37,9 @@ func quad*(this: Sprite): Quad =
   let br: Vec2D = (x: this.pos.x + this.w.float, y: this.pos.y + this.h.float)
   newQuad(this.pos, br)
 
+func origin*(this: Sprite): Vec2D =
+  return this.pos + this.center
+
 func newSprite*(pos: Vec2D, tex: TexturePtr, w, h: int, center: Point = defaultCenter): Sprite =
   new result
   result.tex = tex
