@@ -101,7 +101,7 @@ proc main =
 
   # initialize game objects
   face = newSprite(newVec2D(500, 200), renderer.loadTexture("assets/sprites/face.png"), 32, 32, Point((x: 16.cint, y: 16.cint)))
-  racket = newSprite(newVec2D(564, 200), renderer.loadTexture("assets/sprites/racket.png"), 48, 32, Point((x: 64.cint, y: 16.cint)))
+  racket = newSprite(newVec2D(564, 200), renderer.loadTexture("assets/sprites/racket.png"), 32, 32, Point((x: 64.cint, y: 16.cint)))
   ball = newSprite(newVec2D(600, 332), renderer.loadTexture("assets/sprites/ball.png"), 16, 16, Point((x: 8.cint, y: 8.cint)))
 
   face.anim = newAnimation(10.0, @[0, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 3, 4, 4, 4, 4, 3])
