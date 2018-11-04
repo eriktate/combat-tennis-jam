@@ -114,7 +114,7 @@ proc main =
       ball_direction.y = -my_vec.x
       ball_is_hit = true
 
-    ball.pos = ball.pos + (ball_direction * 0.2)
+    ball.pos = ball.pos + (ball_direction)
     if ball.pos.x < 0 or ball.pos.x > 1280:
       ball_direction.x *= -1
       ball_is_hit = false
