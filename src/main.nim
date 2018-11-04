@@ -57,7 +57,6 @@ proc newGame(renderer: RendererPtr): Game =
   new result
   result.renderer = renderer
 
-
 proc main =
   sdlFailIf(not sdl2.init(INIT_VIDEO or INIT_TIMER or INIT_EVENTS)):
     "SDL2 initialization failed"
@@ -83,12 +82,15 @@ proc main =
   renderer.setDrawColor(r = 118, g = 66, b = 138)
 
   var face: Sprite = newSprite(newVec2D(500, 200), renderer.loadTexture("assets/sprites/face.png"), 32, 32, Point((x: 16.cint, y: 16.cint)))
-  var racket: Sprite = newSprite(newVec2D(564, 200), renderer.loadTexture("assets/sprites/racket.png"), 32, 48, Point((x: 16.cint, y: 64.cint)))
-  var ball: Sprite = newSprite(newVec2D(600, 332), renderer.loadTexture("assets/sprites/ball.png"), 16, 16)
+  var racket: Sprite = newSprite(newVec2D(564, 200), renderer.loadTexture("assets/sprites/racket.png"), 48, 32, Point((x: 64.cint, y: 16.cint)))
+  var ball: Sprite = newSprite(newVec2D(600, 332), renderer.loadTexture("assets/sprites/ball.png"), 16, 16, Point((x: 8.cint, y: 8.cint)))
   var game = newGame(renderer)
   game.player = face
   var dest = rect(500.cint, 200.cint, face.w.cint, face.h.cint)
 
+  var prev_racket_rot: float = 0.0
+  var ball_is_hit = false
+  var ball_direction: Vec2D = (x: 1.0, y: 1.0)
   while true:
     let mouse_point = getMousePoint()
     let rotation_vec = newVec2D(racket.pos + racket.center, newVec2D(mouse_point))
@@ -97,12 +99,31 @@ proc main =
     let
       new_x: float = game.inputs[Input.right].float - game.inputs[Input.left].float
       new_y: float = -(game.inputs[Input.up].float - game.inputs[Input.down].float)
-      offset: Vec2D = (x: 0.0, y: face.h.float)
 
     racket.pos = (face.pos - racket.center + face.center)
     game.player.pos = game.player.pos + (newVec2D(new_x, new_y) * 0.4)
+
+    let swing_arc: Arc = (origin: racket.origin, inner: 24.0, outer: 45.0, ang1: racket.rot, ang2: prev_racket_rot)
+    prev_racket_rot = racket.rot
+    let ball_hitbox: Circle = (origin: ball.origin, radius: ball.w/2)
+
+    if intersect(ball_hitbox,swing_arc) and not ball_is_hit:
+      echo("Hit!")
+      let my_vec: Vec2D = unit(ball.origin - racket.origin)
+      ball_direction.x = my_vec.y
+      ball_direction.y = -my_vec.x
+      ball_is_hit = true
+
+    ball.pos = ball.pos + (ball_direction * 0.2)
+    if ball.pos.x < 0 or ball.pos.x > 1280:
+      ball_direction.x *= -1
+      ball_is_hit = false
+    if ball.pos.y < 0 or ball.pos.y > 720:
+      ball_direction.y *= -1
+      ball_is_hit = false
+
     renderer.clear()
-    renderer.copyEx(racket.tex, racket.texRect(), racket.destRect(), angle = radToDeg(racket.rot + PI/2), center = addr(racket.center), flip = SDL_FLIP_NONE)
+    renderer.copyEx(racket.tex, racket.texRect(), racket.destRect(), angle = radToDeg(racket.rot), center = addr(racket.center), flip = SDL_FLIP_NONE)
     renderer.copyEx(face.tex, face.texRect(), face.destRect(), angle = 0.0, center = nil, flip = SDL_FLIP_NONE)
     renderer.copyEx(ball.tex, ball.texRect(), ball.destRect(), angle = 0.0, center = nil, flip = SDL_FLIP_NONE)
     renderer.present()

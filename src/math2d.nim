@@ -4,6 +4,7 @@
 # dot product
 # scalar mult
 import math
+import strformat
 
 import sdl2
 
@@ -11,19 +12,25 @@ type
   Vec2D* = tuple[x: float, y: float]
   Rectangle* = tuple[x, y, w, h: float]
   Quad* = tuple[tl, br: Vec2D]
-
+  Circle* = tuple[origin: Vec2D, radius: float]
+  Arc* = tuple[origin: Vec2D, inner, outer, ang1, ang2: float ]
 
 func newVec2D*(x, y: float): Vec2D =
   result.x = x
   result.y = y
 
 func newVec2D*(a, b: Vec2D): Vec2D =
-  result.x = (b.x - a.x)
-  result.y = (b.y - a.y)
+  result.x = (a.x - b.x)
+  result.y = (a.y - b.y)
 
 func newVec2D*(point: Point): Vec2D =
   result.x = point.x.float
   result.y = point.y.float
+
+# TODO (erik): Figure out why PI has to be added here.
+func newPolarVec2D*(magnitude: float, theta: float): Vec2D =
+  result.y = magnitude * sin(theta + PI)
+  result.x = magnitude * cos(theta + PI)
 
 func newRectangle*(x, y, w, h: float): Rectangle =
   result = (x: x, y: y, w: w, h: h)
@@ -46,6 +53,9 @@ func `-`*(left: Vec2D, right: Vec2D): Vec2D =
 func `-`*(left: Vec2D, right: Point): Vec2D =
   result.x = left.x - right.x.float
   result.y = left.y - right.y.float
+
+func `*`*(left: Vec2D, right: Vec2D): float =
+  left.x * right.x + left.y * right.y
 
 func `*`*(vec: Vec2D, scalar: float): Vec2D =
   result.x = vec.x * scalar
@@ -129,6 +139,65 @@ func intersect*(vec: Vec2D, quad: Quad): bool =
 
 func intersect*(vec: Vec2D, rec: Rectangle): bool =
   intersect(vec, rec.toQuad)
+
+func between(target, ang1, ang2: float): bool =
+  let rAngle = ((ang2 - ang1) mod 360 + 360) mod 360
+
+  var a1 = ang1
+  var a2 = ang2
+  if rAngle >= 180:
+    a1 = ang2
+    a2 = ang1
+
+  if a1 <= a2:
+    target >= a1 and target <= a2
+  else:
+    target >= a1 or target <= a2
+
+# check circle-line intersection
+func intersect*(start, `end`: Vec2D, circle: Circle): bool =
+  let
+    src = start - circle.origin
+    dest = `end` - circle.origin
+
+  let
+    d = dest - src
+    a = d * d
+    b = 2 * (src * d)
+    c = (src * src) - pow(circle.radius, 2.0)
+    determinant = pow(b, 2.0) - 4 * a * c
+
+  if determinant < 0:
+    return false
+
+  let
+    t1 = (-b + sqrt(determinant)) / (2 * a)
+    t2 = (-b - sqrt(determinant)) / (2 * a)
+
+  if (t1 < 0 or t1 > 1) and (t2 < 0 or t2 > 1):
+    return false
+  return true
+
+func intersect*(circle: Circle, arc: Arc): bool =
+  let
+    diff = newVec2D(arc.origin, circle.origin)
+    distance = diff.mag
+    angle = diff.angle
+
+  if (distance < arc.inner - circle.radius) or distance > (arc.outer + circle.radius):
+    return false
+
+  if between(radToDeg(angle), radToDeg(arc.ang1), radToDeg(arc.ang2)):
+    return true
+
+  let
+    vec_a: Vec2D = arc.origin + newPolarVec2D(arc.outer, arc.ang1)
+    vec_b: Vec2D = arc.origin + newPolarVec2D(arc.outer, arc.ang2)
+
+  if intersect(arc.origin, vec_a, circle) or intersect(arc.origin, vec_b, circle):
+    return true
+
+  return false
 
 func overlap*(src, dest: Quad): bool =
   let
