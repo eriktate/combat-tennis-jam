@@ -4,6 +4,7 @@ import sdl2
 import sdl2/image
 
 import math2d
+import animation
 
 const defaultCenter: Point = (x: 0.cint, y: 0.cint)
 
@@ -13,14 +14,30 @@ type Sprite* = ref object
   w*, h*: int
   rot*: float
   center*: Point
+  anim*: Animation
+  tex_w: cint
+  tex_h: cint
   rect: Rect
   dest: Rect
 
 func rect*(this: Sprite): Rectangle =
   newRectangle(this.pos.x, this.pos.y, this.w.float, this.h.float)
 
-proc texRect*(this: var Sprite): var Rect =
-  this.rect = rect(0.cint, 0.cint, this.w.cint, this.h.cint)
+proc texRect*(this: var Sprite, elapsed: float): var Rect =
+  let
+    idx: int = this.anim.tick(elapsed)
+    cell_w: int = (this.tex_w / this.w).int
+    cell_h: int = (this.tex_h / this.h).int
+
+    row: int = (idx / cell_w).int
+    col: int = idx mod cell_w
+    tex_w: int = this.tex_w
+    tex_h: int = this.tex_h
+
+  if row > cell_h:
+    echo("Invalid row value!")
+
+  this.rect = rect((col * this.w).cint, (row * this.h).cint, this.w.cint, this.h.cint)
   return this.rect
 
 proc destRect*(this: var Sprite): var Rect =
@@ -42,6 +59,7 @@ func origin*(this: Sprite): Vec2D =
 
 func newSprite*(pos: Vec2D, tex: TexturePtr, w, h: int, center: Point = defaultCenter): Sprite =
   new result
+  queryTexture(tex, nil, nil, addr result.tex_w, addr result.tex_h)
   result.tex = tex
   result.pos = pos
   result.w = w
