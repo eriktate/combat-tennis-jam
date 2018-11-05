@@ -6,11 +6,13 @@ import
 
 import
   sdl2,
-  sdl2/image
+  sdl2/image,
+  sdl2/ttf
 
 import
   sprite,
   animation,
+  text,
   math2d,
   input
 
@@ -30,6 +32,7 @@ var
   ball_direction: Vec2D = (x: 1.0, y: 1.0)
   ball_is_hit = false
   prev_racket_rot: float = 0.0
+  test_text: Text
 
 proc update() =
   let
@@ -67,6 +70,7 @@ proc update() =
 
 proc draw(renderer: RendererPtr, sprites: var seq[Sprite]) =
   renderer.clear()
+  renderer.copy(test_text.tex, nil, addr test_text.destRect)
   for spr in sprites.mitems():
     renderer.copyEx(spr.tex, spr.texRect(elapsed_time), spr.destRect(), angle = radToDeg(spr.rot), center = addr spr.center, flip = SDL_FLIP_NONE)
   renderer.present()
@@ -80,10 +84,14 @@ proc main =
     "SDL2 initialization failed"
   defer: sdl2.quit()
 
-  # const imgFlags: cint = IMG_INIT_PNG
-  # sdlFailIf(image.init(imgFlags) != imgFlags):
-  #   "SDL2 Image initialization failed"
-  # defer: image.quit()
+  const imgFlags: cint = IMG_INIT_PNG
+  sdlFailIf(image.init(imgFlags) != imgFlags):
+    "SDL2 Image initialization failed"
+  defer: image.quit()
+
+  sdlFailIf(ttfInit().int != 0):
+    "SDL2 TTF initialization failed"
+  defer: ttfQuit()
 
   sdlFailIf(not setHint("SDL_RENDER_SCALE_QUALITY", "2")):
     "Linear texture filtering could not be enabled"
@@ -106,6 +114,7 @@ proc main =
 
   face.anim = newAnimation(10.0, @[0, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 3, 4, 4, 4, 4, 3])
 
+  test_text = newText(renderer, "Testing!", newVec2D(300, 200))
   var
     sprites: seq[Sprite] = @[face, racket, ball]
     last_time: float = cpuTime()
