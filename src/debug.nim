@@ -31,10 +31,10 @@ proc addLine*(this: var Debug, key: string, val: string = "") =
 
 proc log*(this: var Debug, key, val: string) =
   for line in this.debug_lines.mitems():
-    if line.key == key and line.val != val:
-      echo("Test")
-      line.val = val
-      line.dirty = true
+    if line.key == key:
+      if line.val != val:
+        line.val = val
+        line.dirty = true
       return
 
   echo("Adding line!")
