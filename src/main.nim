@@ -7,25 +7,24 @@ import
 import
   sdl2,
   sdl2/image,
-  sdl2/ttf
+  sdl2/ttf,
+  sdl2/mixer
 
 import
+  sdl,
   sprite,
   text,
   animation,
   debug,
   math2d,
-  input
+  input,
+  sound
 
-type SDLException = object of Exception
-
-template sdlFailIf(cond: typed, reason: string) =
-  if cond: raise SDLException.newException(reason & ", SDL error: " & $getError())
 
 # Global data
 var
   should_quit: bool = false
-  elapsed_time: float = 0.0
+  dt: float = 0.0
   inputs: array[Input, bool]
   face: Sprite
   racket: Sprite
@@ -35,6 +34,7 @@ var
   prev_racket_rot: float = 0.0
   deb: Debug
   hit_count: int = 0
+  sound_manager: SoundManager = getSoundManager()
 
 proc init(renderer: RendererPtr) =
   echo("Init!")
@@ -42,6 +42,9 @@ proc init(renderer: RendererPtr) =
   face = newSprite(newVec2D(500, 200), renderer.loadTexture("assets/sprites/face.png"), 32, 32, Point((x: 16.cint, y: 16.cint)))
   racket = newSprite(newVec2D(564, 200), renderer.loadTexture("assets/sprites/racket.png"), 32, 32, Point((x: 64.cint, y: 16.cint)))
   ball = newSprite(newVec2D(600, 332), renderer.loadTexture("assets/sprites/ball.png"), 16, 16, Point((x: 8.cint, y: 8.cint)))
+
+  # initailize sounds
+  discard sound_manager.register("racket", "assets/sounds/racket.wav")
 
   deb = newDebug(renderer)
 
@@ -73,6 +76,7 @@ proc update() =
     ball_is_hit = true
     hit_count += 1
     deb.log("hit_count", $hit_count)
+    sound_manager.play("racket")
 
   ball.pos = ball.pos + (ball_direction)
   if ball.pos.x < 0 or ball.pos.x > 1280:
@@ -85,7 +89,7 @@ proc update() =
 proc draw(renderer: RendererPtr, sprites: var seq[Sprite]) =
   renderer.clear()
   for spr in sprites.mitems():
-    renderer.copyEx(spr.tex, spr.texRect(elapsed_time), spr.destRect(), angle = radToDeg(spr.rot), center = addr spr.center, flip = SDL_FLIP_NONE)
+    renderer.copyEx(spr.tex, spr.texRect(dt), spr.destRect(), angle = radToDeg(spr.rot), center = addr spr.center, flip = SDL_FLIP_NONE)
 
   for tx in deb.flush().mitems():
     renderer.copy(tx.tex, nil, addr tx.destRect)
@@ -97,7 +101,7 @@ proc gracefulShutdown() {.noconv.} =
   should_quit = true
 
 proc main =
-  sdlFailIf(not sdl2.init(INIT_VIDEO or INIT_TIMER or INIT_EVENTS)):
+  sdlFailIf(not sdl2.init(INIT_VIDEO or INIT_TIMER or INIT_EVENTS or INIT_AUDIO)):
     "SDL2 initialization failed"
   defer: sdl2.quit()
 
@@ -109,6 +113,9 @@ proc main =
   sdlFailIf(ttfInit().int != 0):
     "SDL2 TTF initialization failed"
   defer: ttfQuit()
+
+  sdlFailIf(openAudio(44100.cint, MIX_DEFAULT_FORMAT, 2.cint, 2048.cint) < 0):
+    "SDL2 Mixer initialization failed"
 
   sdlFailIf(not setHint("SDL_RENDER_SCALE_QUALITY", "2")):
     "Linear texture filtering could not be enabled"
@@ -133,7 +140,7 @@ proc main =
 
   while not should_quit:
     let current_time: float = cpuTime()
-    elapsed_time = current_time - last_time
+    dt = current_time - last_time
     last_time = current_time
 
     # collect input
