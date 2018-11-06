@@ -66,3 +66,4 @@ func newSprite*(pos: Vec2D, tex: TexturePtr, w, h: int, center: Point = defaultC
   result.h = h
   result.rot = 0.0
   result.center = center
+  result.anim = newAnimation(0, @[0])

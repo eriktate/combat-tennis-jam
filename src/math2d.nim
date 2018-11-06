@@ -93,7 +93,7 @@ func unit*(vec: Vec2D): Vec2D =
   result.y = vec.y / magnitude
 
 func angle*(vec: Vec2D): float =
-  arctan2(vec.y, vec.x)
+  arctan2(vec.y, vec.x) + PI # TODO (erik): curious why I have to add PI here
 
 func toPoint*(vec: Vec2D): Point =
   result.x = vec.x.cint
