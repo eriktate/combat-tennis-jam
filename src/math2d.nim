@@ -89,6 +89,8 @@ func mag*(vec: Vec2D): float =
 
 func unit*(vec: Vec2D): Vec2D =
   let magnitude: float = mag(vec)
+  if magnitude == 0:
+    return vec
   result.x = vec.x / magnitude
   result.y = vec.y / magnitude
 
