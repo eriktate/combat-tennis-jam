@@ -1,4 +1,4 @@
-{.passL:"-s", optimization: speed.}
+# {.passL:"-s", optimization: speed.}
 import
   strformat,
   math,
@@ -11,8 +11,9 @@ import
 
 import
   sprite,
-  animation,
   text,
+  animation,
+  debug,
   math2d,
   input
 
@@ -32,7 +33,19 @@ var
   ball_direction: Vec2D = (x: 1.0, y: 1.0)
   ball_is_hit = false
   prev_racket_rot: float = 0.0
-  test_text: Text
+  deb: Debug
+  hit_count: int = 0
+
+proc init(renderer: RendererPtr) =
+  echo("Init!")
+  # initialize game objects
+  face = newSprite(newVec2D(500, 200), renderer.loadTexture("assets/sprites/face.png"), 32, 32, Point((x: 16.cint, y: 16.cint)))
+  racket = newSprite(newVec2D(564, 200), renderer.loadTexture("assets/sprites/racket.png"), 32, 32, Point((x: 64.cint, y: 16.cint)))
+  ball = newSprite(newVec2D(600, 332), renderer.loadTexture("assets/sprites/ball.png"), 16, 16, Point((x: 8.cint, y: 8.cint)))
+
+  deb = newDebug(renderer)
+
+  face.anim = newAnimation(10.0, @[0, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 3, 4, 4, 4, 4, 3])
 
 proc update() =
   let
@@ -54,11 +67,12 @@ proc update() =
   let ball_hitbox: Circle = (origin: ball.origin, radius: ball.w/2)
 
   if intersect(ball_hitbox, swing_arc) and not ball_is_hit:
-    echo("Hit!")
     let my_vec: Vec2D = unit(ball.origin - racket.origin)
     ball_direction.x = my_vec.y
     ball_direction.y = -my_vec.x
     ball_is_hit = true
+    hit_count += 1
+    deb.log("hit_count", $hit_count)
 
   ball.pos = ball.pos + (ball_direction)
   if ball.pos.x < 0 or ball.pos.x > 1280:
@@ -70,9 +84,12 @@ proc update() =
 
 proc draw(renderer: RendererPtr, sprites: var seq[Sprite]) =
   renderer.clear()
-  renderer.copy(test_text.tex, nil, addr test_text.destRect)
   for spr in sprites.mitems():
     renderer.copyEx(spr.tex, spr.texRect(elapsed_time), spr.destRect(), angle = radToDeg(spr.rot), center = addr spr.center, flip = SDL_FLIP_NONE)
+
+  for tx in deb.flush().mitems():
+    renderer.copy(tx.tex, nil, addr tx.destRect)
+
   renderer.present()
 
 proc gracefulShutdown() {.noconv.} =
@@ -107,17 +124,12 @@ proc main =
 
   renderer.setDrawColor(r = 118, g = 66, b = 138)
 
-  # initialize game objects
-  face = newSprite(newVec2D(500, 200), renderer.loadTexture("assets/sprites/face.png"), 32, 32, Point((x: 16.cint, y: 16.cint)))
-  racket = newSprite(newVec2D(564, 200), renderer.loadTexture("assets/sprites/racket.png"), 32, 32, Point((x: 64.cint, y: 16.cint)))
-  ball = newSprite(newVec2D(600, 332), renderer.loadTexture("assets/sprites/ball.png"), 16, 16, Point((x: 8.cint, y: 8.cint)))
+  init(renderer)
 
-  face.anim = newAnimation(10.0, @[0, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 3, 4, 4, 4, 4, 3])
-
-  test_text = newText(renderer, "Testing!", newVec2D(300, 200))
   var
     sprites: seq[Sprite] = @[face, racket, ball]
     last_time: float = cpuTime()
+
 
   while not should_quit:
     let current_time: float = cpuTime()
