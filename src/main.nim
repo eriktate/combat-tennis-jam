@@ -18,7 +18,8 @@ import
   debug,
   math2d,
   input,
-  sound
+  sound,
+  gamepad
 
 
 const
@@ -42,6 +43,7 @@ var
   frame_count: int = 0
   elapsed_time: float = 0.0
   sound_manager: SoundManager = getSoundManager()
+  gp: Gamepad
 
 proc check_fps() =
   elapsed_time += dt
@@ -53,8 +55,9 @@ proc check_fps() =
     frame_count = 0
 
 proc init(renderer: RendererPtr) =
-  echo("Init!")
   # initialize game objects
+  gp = newGamepad()
+
   player = newSprite(newVec2D(500, 200), renderer.loadTexture("assets/sprites/space_man_sheet.png"), 64, 64, Point((x: 32.cint, y: 32.cint)), 32, 32)
   racket = newSprite(newVec2D(564, 200), renderer.loadTexture("assets/sprites/racket.png"), 32, 32, Point((x: 64.cint, y: 16.cint)))
   ball = newSprite(newVec2D(600, 332), renderer.loadTexture("assets/sprites/ball.png"), 16, 16, Point((x: 8.cint, y: 8.cint)))
@@ -76,11 +79,12 @@ proc update() =
     mouse_point = getMousePoint()
     new_x: float = inputs[Input.right].float - inputs[Input.left].float
     new_y: float = -(inputs[Input.up].float - inputs[Input.down].float)
-    dir_vec: Vec2D = (x: new_x, y: new_y).unit
     dest = rect(500.cint, 200.cint, player.w.cint, player.h.cint)
+    dir_vec = gp.leftStickVec
 
   check_fps()
   deb.log("fps", $fps)
+
   player.pos = player.pos + (dir_vec * 512 * dt)
   racket.pos = (player.pos - racket.center + player.center)
 
@@ -96,7 +100,8 @@ proc update() =
     player.setAnim("run_" & $player.facing)
 
 
-  let rotation_vec = newVec2D(newVec2D(mouse_point), racket.pos + racket.center)
+  # let rotation_vec = newVec2D(newVec2D(mouse_point), racket.pos + racket.center)
+  let rotation_vec = gp.rightStickVec
 
   racket.rot = rotation_vec.angle
 
@@ -137,7 +142,7 @@ proc gracefulShutdown() {.noconv.} =
   should_quit = true
 
 proc main =
-  sdlFailIf(not sdl2.init(INIT_VIDEO or INIT_TIMER or INIT_EVENTS or INIT_AUDIO)):
+  sdlFailIf(not sdl2.init(INIT_VIDEO or INIT_TIMER or INIT_EVENTS or INIT_AUDIO or INIT_JOYSTICK)):
     "SDL2 initialization failed"
   defer: sdl2.quit()
 
@@ -155,6 +160,8 @@ proc main =
 
   sdlFailIf(not setHint("SDL_RENDER_SCALE_QUALITY", "0")):
     "Linear texture filtering could not be enabled"
+
+  # sdlFailIf(not setHint("SDL_HINT_GAMECONTROLLERCONFIG"))
 
   let window = createWindow(title = "Combat Tennis Jam", x = SDL_WINDOWPOS_CENTERED,
     y = SDL_WINDOWPOS_CENTERED, w = window_width, h = window_height, flags = SDL_WINDOW_SHOWN)
