@@ -111,15 +111,17 @@ proc update() =
   let ball_hitbox: Circle = (origin: ball.origin, radius: ball.w/2)
 
   if intersect(ball_hitbox, swing_arc) and not ball_is_hit:
-    let my_vec: Vec2D = unit(ball.origin - racket.origin)
-    ball_direction.x = my_vec.y
-    ball_direction.y = -my_vec.x
+    let orientation: Vec2D = unit(ball.origin - racket.origin)
+    # ball_direction.x = orientation.y
+    # ball_direction.y = -orientation.x
+    ball_direction.x = orientation.y * sgn(ball_direction.x).float * sgn(-orientation.y).float
+    ball_direction.y = orientation.x * sgn(-ball_direction.y).float * sgn(orientation.x).float
     ball_is_hit = true
     hit_count += 1
     deb.log("hit_count", $hit_count)
     sound_manager.play("racket")
 
-  ball.pos = ball.pos + (ball_direction)
+  ball.pos = ball.pos + (ball_direction * 0.5)
   if ball.pos.x < 0 or ball.pos.x > 1280:
     ball_direction.x *= -1
     ball_is_hit = false
