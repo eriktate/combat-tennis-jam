@@ -2,7 +2,7 @@ import
   sdl2
 
 type
-  Input* {.pure.} = enum none, left, right, up, down, restart, quit
+  Input* {.pure.} = enum none, left, right, up, down, restart, exit
 
 func getMousePoint*(): Point =
   var
@@ -18,7 +18,7 @@ func toInput(key: ScanCode): Input =
   of SDL_SCANCODE_D: Input.right
   of SDL_SCANCODE_W: Input.up
   of SDL_SCANCODE_S: Input.down
-  of SDL_SCANCODE_Q: Input.quit
+  of SDL_SCANCODE_Q: Input.exit
   else: Input.none
 
 proc handleInput*(inputs: var array[Input, bool]) =
@@ -26,7 +26,7 @@ proc handleInput*(inputs: var array[Input, bool]) =
   while pollEvent(event):
     case event.kind
     of QuitEvent:
-      inputs[Input.quit] = true
+      inputs[Input.exit] = true
     of KeyDown:
       inputs[event.key.keysym.scancode.toInput] = true
     of KeyUp:

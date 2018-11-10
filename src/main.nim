@@ -105,7 +105,7 @@ proc update() =
 
   racket.rot = rotation_vec.angle
 
-  let swing_arc: Arc = (origin: racket.origin, inner: 24.0, outer: 45.0, ang1: racket.rot, ang2: prev_racket_rot)
+  let swing_arc: Arc = (origin: racket.origin, inner: 24.0, outer: 64.0, ang1: racket.rot, ang2: prev_racket_rot)
   prev_racket_rot = racket.rot
 
   let ball_hitbox: Circle = (origin: ball.origin, radius: ball.w/2)
@@ -191,6 +191,8 @@ proc main =
     # collect input
     handleInput(inputs)
 
+    if inputs[Input.exit]:
+      should_quit = true
     # simulation
     update()
 

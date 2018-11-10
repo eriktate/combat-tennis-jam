@@ -37,7 +37,6 @@ proc log*(this: var Debug, key, val: string) =
         line.dirty = true
       return
 
-  echo("Adding line!")
   this.addline(key, val)
 
 
