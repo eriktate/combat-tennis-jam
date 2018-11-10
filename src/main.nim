@@ -61,7 +61,7 @@ proc init(renderer: RendererPtr) =
   player = newSprite(newVec2D(500, 200), renderer.loadTexture("assets/sprites/space_man_sheet.png"), 64, 64, Point((x: 32.cint, y: 32.cint)), 32, 32)
   racket = newSprite(newVec2D(564, 200), renderer.loadTexture("assets/sprites/racket.png"), 32, 32, Point((x: 64.cint, y: 16.cint)))
   ball = newSprite(newVec2D(600, 332), renderer.loadTexture("assets/sprites/ball.png"), 16, 16, Point((x: 8.cint, y: 8.cint)))
-  court = newSprite(newVec2D((window_width.float/2 - 720/2), 0.0), renderer.loadTexture("assets/sprites/grass_court.png"), 720, 720)
+  court = newSprite(newVec2D((window_width.float/2 - 720/2), 0.0), renderer.loadTexture("assets/sprites/smaller_court.png"), 720, 720, Point((x: 0.cint, y: 0.cint)), 360, 360)
 
   # initailize sounds
   discard sound_manager.register("racket", "assets/sounds/racket.wav")
@@ -174,7 +174,7 @@ proc main =
   sdlFailIf renderer.isNil: "Renderer could not be created"
   defer: renderer.destroy()
 
-  renderer.setDrawColor(r = 118, g = 66, b = 138)
+  renderer.setDrawColor(r = 204, g = 220, b = 253)
 
   init(renderer)
 
