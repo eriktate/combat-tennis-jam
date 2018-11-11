@@ -8,9 +8,8 @@ import
 
 import
   math2d,
-  animation
-
-const defaultCenter: Point = (x: 0.cint, y: 0.cint)
+  animation,
+  image
 
 type
   Direction* = enum
@@ -19,22 +18,14 @@ type
 
   Sprite* = ref object
     pos*: Vec2D
-    tex*: TexturePtr
+    image: 
     w*, h*: int
-    rot*: float
-    center*: Point
-    frame_w*: int
-    frame_h*: int
     facing*: Direction
     current_key: string
     anims: Table[string, Animation]
     anim: Animation
-    tex_w: cint
-    tex_h: cint
-    rect: Rect
-    dest: Rect
 
-proc newSprite*(pos: Vec2D, tex: TexturePtr, w, h: int, center: Point = defaultCenter, frame_w: int = 0, frame_h: int = 0): Sprite =
+proc newSprite*(pos: Vec2D, img: Image, w, h: int, center: Point = defaultCenter, frame_w: int = 0, frame_h: int = 0): Sprite =
   new result
   queryTexture(tex, nil, nil, addr result.tex_w, addr result.tex_h)
   result.tex = tex
